@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a56db">
+<title>R동 엘리베이터 안내 · 도합12단</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1a56db;--blue-l:#dbeafe;--blue-m:#1e40af;
+  --green:#166534;--green-l:#dcfce7;
+  --amber:#92400e;--amber-l:#fef3c7;
+  --red:#991b1b;--red-l:#fee2e2;
+  --t:#111827;--t2:#6b7280;--t3:#9ca3af;
+  --bdr:rgba(0,0,0,.10);--bdr2:rgba(0,0,0,.18);
+  --bg:#f3f4f6;--sur:#fff;--sur2:#f9fafb;
+  --r:14px;--rs:9px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --t:#f9fafb;--t2:#9ca3af;--t3:#6b7280;
+  --bdr:rgba(255,255,255,.10);--bdr2:rgba(255,255,255,.18);
+  --bg:#111827;--sur:#1f2937;--sur2:#374151;
+  --blue-l:#1e3a5f;--green-l:#14532d;--amber-l:#451a03;--red-l:#450a0a;
+}}
+
+body{font-family:-apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;padding-bottom:48px;}
+
+/* 상단바 */
+.topbar{background:var(--sur);border-bottom:.5px solid var(--bdr);padding:13px 16px 11px;display:flex;align-items:center;gap:11px;}
+.tlogo{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tlogo svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ttitle{font-size:15px;font-weight:700;color:var(--t);}
+.ttop-sub{font-size:11px;color:var(--t2);margin-top:1px;}
+
+/* 탭 네비게이션 */
+.tabnav{background:var(--sur);border-bottom:.5px solid var(--bdr);display:flex;padding:0 12px;}
+.tabnav-btn{flex:1;padding:13px 0 11px;font-size:14px;font-weight:600;color:var(--t2);background:none;border:none;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s;-webkit-tap-highlight-color:transparent;}
+.tabnav-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tabnav-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+.content{padding:16px;max-width:480px;margin:0 auto;}
+.tabpanel{display:none;}
+.tabpanel.active{display:block;}
+
+/* 카드 */
+.card{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.ctitle{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.ctitle svg{width:15px;height:15px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
+/* 폼 */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.fld{display:flex;flex-direction:column;gap:5px;}
+.fld label{font-size:12px;font-weight:600;color:var(--t2);}
+select,input[type=text]{border:1px solid var(--bdr2);border-radius:var(--rs);padding:11px 12px;font-size:15px;background:var(--sur);color:var(--t);width:100%;font-family:inherit;-webkit-appearance:none;appearance:none;}
+select:focus,input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.13);}
+
+/* 시간 선택 */
+.tsel{display:grid;grid-template-columns:72px 1fr 10px 1fr;align-items:center;gap:4px;}
+.tsel select{padding:11px 4px;font-size:14px;text-align:center;}
+.tcolon{font-size:16px;font-weight:700;color:var(--t2);text-align:center;}
+
+/* 혼잡도 배지 */
+.crowd-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 11px;border-radius:20px;margin-bottom:12px;}
+
+/* 즉시탑승 토글 */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--rs);padding:12px 14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tog-lbl{font-size:14px;font-weight:600;color:var(--t);}
+.tog-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+.sw{width:44px;height:26px;background:#d1d5db;border-radius:99px;position:relative;transition:background .2s;flex-shrink:0;}
+.sw::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.sw.on{background:var(--blue);}
+.sw.on::after{transform:translateX(18px);}
+
+/* 버튼 */
+.btn{width:100%;padding:14px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:inherit;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent;margin-top:4px;}
+.btn svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.btn:active{opacity:.85;transform:scale(.98);}
+.btn-sm{background:var(--sur);border:.5px solid var(--bdr2);border-radius:var(--rs);padding:9px;font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;width:100%;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;-webkit-tap-highlight-color:transparent;}
+.btn-sm svg{width:14px;height:14px;stroke:var(--blue);fill:none;stroke-width:2.5;stroke-linecap:round;}
+
+/* 구분선 */
+.divhr{border:none;border-top:.5px solid var(--bdr);margin:14px 0;}
+
+/* 지각 탭: 수업 목록 */
+.cls-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.cls-item{display:flex;align-items:center;gap:10px;background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--rs);padding:11px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s;}
+.cls-item.sel{border-color:var(--blue);background:var(--blue-l);}
+.ci-day{font-size:11px;font-weight:700;padding:3px 7px;border-radius:6px;background:var(--sur);color:var(--t2);min-width:26px;text-align:center;border:.5px solid var(--bdr);flex-shrink:0;}
+.cls-item.sel .ci-day{background:var(--blue);color:#fff;border-color:var(--blue);}
+.ci-info{flex:1;}
+.ci-name{font-size:14px;font-weight:600;color:var(--t);}
+.ci-meta{font-size:12px;color:var(--t2);margin-top:2px;}
+.ci-radio{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--bdr2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.cls-item.sel .ci-radio{background:var(--blue);border-color:var(--blue);}
+.ci-radio-dot{width:8px;height:8px;border-radius:50%;background:transparent;transition:background .15s;}
+.cls-item.sel .ci-radio-dot{background:#fff;}
+.add-form{background:var(--sur2);border:.5px solid var(--bdr);border-radius:var(--rs);padding:14px;margin-bottom:10px;}
+.add-form-title{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px;}
+.empty-hint{text-align:center;padding:20px 0;color:var(--t3);font-size:13px;}
+
+/* 결과 공통 */
+.rsec{animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.sechdg{font-size:13px;font-weight:700;color:var(--t2);margin-bottom:8px;}
+.spill{font-size:12px;font-weight:700;padding:4px 11px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.psafe{background:var(--green-l);color:var(--green);}
+.pwarn{background:var(--amber-l);color:var(--amber);}
+.pdanger{background:var(--red-l);color:var(--red);}
+.pblue{background:var(--blue-l);color:var(--blue-m);}
+.rhdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px;}
+.rtitle{font-size:16px;font-weight:700;}
+.rsubt{font-size:12px;color:var(--t2);margin-top:2px;}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.tbox{background:var(--sur2);border-radius:var(--rs);padding:13px;border:.5px solid var(--bdr);}
+.tbox.hi{background:var(--blue-l);border-color:transparent;}
+.tblb{font-size:11px;font-weight:600;color:var(--t2);display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+.tblb svg{width:13px;height:13px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tbox.hi .tblb,.tbox.hi .tblb svg{color:var(--blue-m);stroke:var(--blue-m);}
+.tval{font-size:26px;font-weight:800;color:var(--t);line-height:1;}
+.tbox.hi .tval{color:var(--blue-m);}
+.tsub3{font-size:11px;color:var(--t2);margin-top:5px;}
+.ban{border-radius:var(--rs);padding:12px 13px;display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.bico{width:22px;height:22px;flex-shrink:0;margin-top:1px;}
+.bico svg{width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ban strong{display:block;font-weight:700;font-size:14px;margin-bottom:2px;}
+.ban span{font-size:12px;}
+.bsafe{background:var(--green-l);}
+.bsafe .bico svg,.bsafe strong{stroke:var(--green);color:var(--green);}
+.bsafe span{color:var(--green);opacity:.8;}
+.bwarn{background:var(--amber-l);}
+.bwarn .bico svg,.bwarn strong{stroke:var(--amber);color:var(--amber);}
+.bwarn span{color:var(--amber);opacity:.8;}
+.bdanger{background:var(--red-l);}
+.bdanger .bico svg,.bdanger strong{stroke:var(--red);color:var(--red);}
+.bdanger span{color:var(--red);opacity:.8;}
+.bblue{background:var(--blue-l);}
+.bblue .bico svg,.bblue strong{stroke:var(--blue-m);color:var(--blue-m);}
+.bblue span{color:var(--blue-m);opacity:.8;}
+.pbar-w{background:var(--sur2);border-radius:99px;height:7px;overflow:hidden;margin-bottom:10px;border:.5px solid var(--bdr);}
+.pbar{height:100%;border-radius:99px;transition:width .6s ease;}
+.mrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.mrow span{font-size:12px;color:var(--t2);}
+.mrow strong{font-size:13px;font-weight:700;}
+.dtxt{font-size:12px;color:var(--t2);line-height:1.6;}
+.dtxt strong{color:var(--t);font-weight:700;}
+.cdrow{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.cdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* 지각 결과 카드 */
+.late-card{background:var(--sur);border:.5px solid var(--bdr);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;}
+.lc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;gap:8px;}
+.lc-name{font-size:15px;font-weight:700;}
+.lc-meta{font-size:12px;color:var(--t2);margin-top:2px;}
+.lc-times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.lc-box{background:var(--sur2);border-radius:var(--rs);padding:10px;border:.5px solid var(--bdr);}
+.lc-box .ll{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;}
+.lc-box .lv{font-size:20px;font-weight:800;}
+
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<!-- 상단바 -->
+<div class="topbar">
+  <div class="tlogo">
+    <svg viewBox="0 0 24 24"><rect x="3" y="2" width="18" height="20" rx="1"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/><rect x="9" y="12" width="6" height="10"/><circle cx="9" cy="7" r=".6" fill="white"/><circle cx="15" cy="7" r=".6" fill="white"/></svg>
+  </div>
+  <div>
+    <div class="ttitle">R동 엘리베이터 안내</div>
+    <div class="ttop-sub">홍문관 · 도합12단 프로젝트</div>
+  </div>
+</div>
+
+<!-- 탭 네비 -->
+<div class="tabnav">
+  <button class="tabnav-btn active" id="navTab1" onclick="switchTab(1)">
+    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="10" y1="2" x2="10" y2="22"/><polyline points="7 8 10 5 13 8"/><polyline points="7 16 10 19 13 16"/></svg>
+    소요시간 계산
+  </button>
+  <button class="tabnav-btn" id="navTab2" onclick="switchTab(2)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2"/><path d="M5 4L2 7"/><path d="M22 7l-3-3"/></svg>
+    지각 가능성 확인
+  </button>
+</div>
+
+<div class="content">
+
+  <!-- ══════════════════════════════════════
+       탭1: 소요시간 계산
+  ══════════════════════════════════════ -->
+  <div class="tabpanel active" id="panel1">
+
+    <div class="card">
+      <div class="ctitle">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/></svg>
+        이동 조건
+      </div>
+
+      <!-- 요일 -->
+      <div class="fld" style="margin-bottom:10px;">
+        <label>요일</label>
+        <select id="t1Day" onchange="t1UpdateBadge()">
+          <option value="월">월요일</option><option value="화">화요일</option>
+          <option value="수">수요일</option><option value="목">목요일</option><option value="금">금요일</option>
+        </select>
+      </div>
+
+      <!-- 현재 시각 -->
+      <div class="fld" style="margin-bottom:10px;">
+        <label>현재 시각</label>
+        <div class="tsel">
+          <select id="t1Ampm" onchange="t1UpdateBadge()"><option value="am">오전</option><option value="pm">오후</option></select>
+          <select id="t1Hour" onchange="t1UpdateBadge()">
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+            <option>7</option><option>8</option><option value="9" selected>9</option><option>10</option><option>11</option><option>12</option>
+          </select>
+          <span class="tcolon">:</span>
+          <select id="t1Min" onchange="t1UpdateBadge()">
+            <option value="0">00</option><option value="5">05</option><option value="10">10</option><option value="15">15</option>
+            <option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option>
+            <option value="40">40</option><option value="45" selected>45</option><option value="50">50</option><option value="55">55</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 혼잡도 배지 -->
+      <div id="t1Badge" class="crowd-badge"></div>
+
+      <!-- 목적지 -->
+      <div class="fld" style="margin-bottom:10px;">
+        <label>목적지 층</label>
+        <select id="t1Floor">
+          <option value="3">3층</option><option value="4" selected>4층</option><option value="5">5층</option>
+          <option value="6">6층</option><option value="7">7층</option><option value="8">8층</option>
+          <option value="9">9층</option><option value="10">10층</option><option value="11">11층</option><option value="12">12층</option>
+        </select>
+      </div>
+
+      <!-- 즉시탑승 토글 -->
+      <div class="toggle-row" onclick="toggleInstant()">
+        <div>
+          <div class="tog-lbl">엘리베이터 바로 탑승</div>
+          <div class="tog-sub">도착하자마자 탈 수 있는 상황</div>
+        </div>
+        <div class="sw" id="instantSw"></div>
+      </div>
+
+      <button class="btn" onclick="calcNow()">
+        <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8.01" y2="10" stroke-width="3"/><line x1="12" y1="10" x2="12.01" y2="10" stroke-width="3"/><line x1="16" y1="10" x2="16.01" y2="10" stroke-width="3"/><line x1="8" y1="14" x2="8.01" y2="14" stroke-width="3"/><line x1="12" y1="14" x2="12.01" y2="14" stroke-width="3"/><line x1="16" y1="14" x2="16.01" y2="14" stroke-width="3"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+        소요시간 계산
+      </button>
+    </div>
+
+    <!-- 탭1 결과 -->
+    <div id="t1Res" class="hidden rsec">
+      <div class="sechdg">계산 결과</div>
+      <div class="card">
+        <div class="rhdr">
+          <div><div class="rtitle" id="t1RTitle">-</div><div class="rsubt" id="t1RSub">-</div></div>
+          <div class="spill" id="t1Pill">-</div>
+        </div>
+        <div class="tgrid">
+          <div class="tbox" id="t1ElevBox">
+            <div class="tblb">
+              <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="10" y1="2" x2="10" y2="22"/><polyline points="7 8 10 5 13 8"/><polyline points="7 16 10 19 13 16"/></svg>
+              엘리베이터
+            </div>
+            <div class="tval" id="t1ElevT">-</div>
+            <div class="tsub3" id="t1ElevSub">-</div>
+          </div>
+          <div class="tbox">
+            <div class="tblb">
+              <svg viewBox="0 0 24 24"><path d="M4 20h4v-4h4v-4h4v-4h4"/><path d="M4 20V8"/></svg>
+              계단
+            </div>
+            <div class="tval" id="t1StairT">-</div>
+            <div class="tsub3">안정적</div>
+          </div>
+        </div>
+        <div class="ban" id="t1RecBan">
+          <div class="bico" id="t1RecIco"></div>
+          <div><strong id="t1RecTitle">-</strong><span id="t1RecDesc">-</span></div>
+        </div>
+        <!-- 칼로리 카드 -->
+        <div id="t1CalRow" style="display:none;background:var(--green-l);border-radius:var(--rs);padding:11px 13px;margin-bottom:10px;">
+          <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px;">🏃 계단 이용 시 칼로리 소모</div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:22px;font-weight:800;color:var(--green);" id="t1CalKcal">-</span>
+            <span style="font-size:12px;color:var(--green);opacity:.8;" id="t1CalFood">-</span>
+          </div>
+        </div>
+        <hr class="divhr">
+        <div class="dtxt" id="t1Dtl"></div>
+        <div class="cdrow"><div class="cdot" id="t1CDot"></div><div class="dtxt" id="t1CLbl"></div></div>
+      </div>
+    </div>
+
+  </div><!-- /panel1 -->
+
+
+  <!-- ══════════════════════════════════════
+       탭2: 지각 가능성 확인
+  ══════════════════════════════════════ -->
+  <div class="tabpanel" id="panel2">
+
+    <!-- STEP A: 현재 상황 입력 -->
+    <div class="card">
+      <div class="ctitle">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        지금 몇 시예요?
+      </div>
+      <div class="row2">
+        <div class="fld">
+          <label>요일</label>
+          <select id="t2Day">
+            <option value="월">월요일</option><option value="화">화요일</option>
+            <option value="수">수요일</option><option value="목">목요일</option><option value="금">금요일</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>현재 시각</label>
+          <div class="tsel">
+            <select id="t2NowAmpm"><option value="am">오전</option><option value="pm">오후</option></select>
+            <select id="t2NowH">
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+              <option>7</option><option>8</option><option value="9" selected>9</option><option>10</option><option>11</option><option>12</option>
+            </select>
+            <span class="tcolon">:</span>
+            <select id="t2NowM">
+              <option value="0">00</option><option value="5">05</option><option value="10">10</option><option value="15">15</option>
+              <option value="20">20</option><option value="25">25</option><option value="30">30</option><option value="35">35</option>
+              <option value="40">40</option><option value="45" selected>45</option><option value="50">50</option><option value="55">55</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP B: 수업 목록 -->
+    <div class="card">
+      <div class="ctitle">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        수업 목록
+        <span style="margin-left:auto;font-size:11px;font-weight:500;color:var(--t3);text-transform:none;letter-spacing:0;">탭하여 선택</span>
+      </div>
+
+      <div id="t2ClsList"><div class="empty-hint">아래에서 수업을 추가하세요</div></div>
+
+      <!-- 수업 추가 폼 -->
+      <div class="add-form">
+        <div class="add-form-title">수업 추가</div>
+        <div class="row3">
+          <div class="fld"><label>요일</label>
+            <select id="t2AddDay">
+              <option value="월">월</option><option value="화">화</option>
+              <option value="수">수</option><option value="목">목</option><option value="금">금</option>
+            </select>
+          </div>
+          <div class="fld"><label>층수</label>
+            <select id="t2AddFloor">
+              <option value="3">3층</option><option value="4">4층</option><option value="5">5층</option>
+              <option value="6">6층</option><option value="7">7층</option><option value="8" selected>8층</option>
+              <option value="9">9층</option><option value="10">10층</option><option value="11">11층</option><option value="12">12층</option>
+            </select>
+          </div>
+          <div class="fld"><label>오전/오후</label>
+            <select id="t2AddAmpm"><option value="am">오전</option><option value="pm">오후</option></select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="fld"><label>시</label>
+            <select id="t2AddH">
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+              <option>7</option><option>8</option><option>9</option><option value="10" selected>10</option><option>11</option><option>12</option>
+            </select>
+          </div>
+          <div class="fld"><label>분</label>
+            <select id="t2AddM">
+              <option value="0">00분</option><option value="5">05분</option><option value="10">10분</option><option value="15">15분</option>
+              <option value="20">20분</option><option value="25">25분</option><option value="30">30분</option><option value="35">35분</option>
+              <option value="40">40분</option><option value="45">45분</option><option value="50">50분</option><option value="55">55분</option>
+            </select>
+          </div>
+        </div>
+        <div class="fld" style="margin-bottom:8px;"><label>수업명 (선택)</label>
+          <input type="text" id="t2AddName" placeholder="예: 창의적공학설계">
+        </div>
+        <button class="btn-sm" onclick="addCls()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          수업 추가
+        </button>
+      </div>
+
+      <button class="btn" id="t2LateBtn" onclick="checkLate()" disabled>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2"/><path d="M5 4L2 7"/><path d="M22 7l-3-3"/></svg>
+        지각 가능성 확인
+      </button>
+    </div>
+
+    <!-- 탭2 결과 -->
+    <div id="t2Res" class="hidden rsec">
+      <div class="sechdg" id="t2ResHdg">결과</div>
+      <div id="t2ResCont"></div>
+    </div>
+
+  </div><!-- /panel2 -->
+
+</div><!-- /content -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// 공통 유틸
+// ═══════════════════════════════════════════════════
+const PEAKS=[600,840,780,1020]; // 10:00, 14:00, 13:00, 17:00
+const DW={월:1.0,화:1.15,수:0.85,목:1.1,금:0.65};
+
+function selToMin(ampm,h,m){
+  h=+h; m=+m;
+  if(ampm==='am'){ if(h===12) h=0; }
+  else { if(h!==12) h+=12; }
+  return h*60+m;
+}
+function minToStr(n){
+  const h=Math.floor(n/60), m=n%60;
+  const ap=h<12?'오전':'오후', h12=h%12||12;
+  return ap+' '+h12+':'+String(m).padStart(2,'0');
+}
+function fs(s){
+  s=Math.round(s); const mn=Math.floor(s/60), r=s%60;
+  return mn===0 ? r+'초' : mn+'분'+(r?' '+r+'초':'');
+}
+
+function crowdLevel(min, day){
+  const dw=DW[day]||1;
+  let d=Infinity;
+  for(const p of PEAKS) d=Math.min(d,Math.abs(min-p));
+  const zone=dw>=1.1?20:15;
+  if(d<=5&&dw>=1.1) return 3;
+  if(d<=5)          return 2;
+  if(d<=zone)       return dw>=1.1?2:1;
+  return 0;
+}
+function crowdMeta(lv){
+  if(lv===3) return{lb:'매우 혼잡',c:'#991b1b',bg:'var(--red-l)',pill:'pdanger'};
+  if(lv===2) return{lb:'혼잡',    c:'#92400e',bg:'var(--amber-l)',pill:'pwarn'};
+  if(lv===1) return{lb:'보통',    c:'#1d4ed8',bg:'var(--blue-l)',pill:'pblue'};
+  return          {lb:'여유',    c:'#166534',bg:'var(--green-l)',pill:'psafe'};
+}
+function waitSec(min,day,instant){
+  if(instant) return 0;
+  const lv=crowdLevel(min,day);
+  if(lv===3) return 540; if(lv===2) return 420;
+  if(lv===1) return 240; return 90;
+}
+function rideSec(f){ return Math.round(+f*7.5+10); }
+function stairUp(f){
+  f=+f; let t=0;
+  for(let i=1;i<=f;i++) t+=20+(i>4?3:0);
+  return Math.round(t);
+}
+
+// ─────────────────────────────────────────────────────────
+// 칼로리 계산 (MET=8.0, 기본 체중 65kg)
+// ─────────────────────────────────────────────────────────
+const FOODS = [
+  {name:'아메리카노',    kcal:10,  emoji:'☕'},
+  {name:'포도당 사탕',  kcal:20,  emoji:'🍬'},
+  {name:'껌 한 통',     kcal:25,  emoji:'🟩'},
+  {name:'믹스커피',     kcal:50,  emoji:'☕'},
+  {name:'바나나 1/3개', kcal:30,  emoji:'🍌'},
+  {name:'새우깡 10개',  kcal:48,  emoji:'🍟'},
+  {name:'사과 반 개',   kcal:50,  emoji:'🍎'},
+  {name:'젤리 한 봉',   kcal:70,  emoji:'🍭'},
+  {name:'오레오 1개',   kcal:53,  emoji:'🍪'},
+  {name:'삼각김밥 1/4', kcal:45,  emoji:'🍙'},
+  {name:'초코파이 1/5', kcal:32,  emoji:'🍫'},
+  {name:'포카칩 5개',   kcal:55,  emoji:'🥔'},
+];
+function calcCalorie(floor, weight=65){
+  const MET=8.0, sec=stairUp(floor), h=sec/3600;
+  return Math.round(MET*weight*h*10)/10;
+}
+function getFoodComparison(kcal){
+  // 칼로리에 가장 가까운 음식 찾기
+  let best=FOODS[0], bestDiff=Math.abs(FOODS[0].kcal-kcal);
+  for(const f of FOODS){
+    const d=Math.abs(f.kcal-kcal);
+    if(d<bestDiff){bestDiff=d;best=f;}
+  }
+  const ratio=(kcal/best.kcal);
+  if(ratio>=0.9&&ratio<=1.1) return best.emoji+' '+best.name+' 약 1개';
+  if(ratio<0.9) return best.emoji+' '+best.name+' 약 '+Math.round(ratio*10)/10+'개';
+  return best.emoji+' '+best.name+' 약 '+Math.round(ratio*10)/10+'개';
+}
+
+
+const SVGI={
+  check:'<svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>',
+  warn: '<svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-width="3"/></svg>',
+  stairs:'<svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 20h4v-4h4v-4h4v-4h4"/><path d="M4 20V8"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5l3 3"/></svg>',
+  run:  '<svg viewBox="0 0 24 24" style="width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="13" cy="4" r="1.5"/><path d="M4 17l4-8 2.5 2.5L14 8l3 9"/><path d="M8 9l-2 8"/></svg>'
+};
+function setBan(el,icoEl,cls,ico,title,desc){
+  el.className='ban '+cls;
+  icoEl.innerHTML=SVGI[ico]||SVGI.clock;
+  el.querySelector('strong').textContent=title;
+  el.querySelector('span').textContent=desc;
+}
+
+// ═══════════════════════════════════════════════════
+// 탭 전환
+// ═══════════════════════════════════════════════════
+function switchTab(n){
+  document.getElementById('navTab1').classList.toggle('active',n===1);
+  document.getElementById('navTab2').classList.toggle('active',n===2);
+  document.getElementById('panel1').classList.toggle('active',n===1);
+  document.getElementById('panel2').classList.toggle('active',n===2);
+}
+
+// ═══════════════════════════════════════════════════
+// 탭1: 소요시간
+// ═══════════════════════════════════════════════════
+let instant=false;
+function toggleInstant(){
+  instant=!instant;
+  document.getElementById('instantSw').classList.toggle('on',instant);
+  // 결과가 이미 표시된 상태면 즉시 재계산
+  if(!document.getElementById('t1Res').classList.contains('hidden')){
+    calcNow();
+  }
+}
+
+function t1GetMin(){
+  return selToMin(
+    document.getElementById('t1Ampm').value,
+    document.getElementById('t1Hour').value,
+    document.getElementById('t1Min').value
+  );
+}
+function t1UpdateBadge(){
+  const day=document.getElementById('t1Day').value;
+  const min=t1GetMin();
+  const lv=crowdLevel(min,day);
+  const m=crowdMeta(lv);
+  const icons=['🟢','🔵','🟠','🔴'];
+  const el=document.getElementById('t1Badge');
+  el.textContent=icons[lv]+' 현재 '+m.lb;
+  el.style.background=m.bg; el.style.color=m.c;
+}
+
+function calcNow(){
+  const day=document.getElementById('t1Day').value;
+  const nowMin=t1GetMin();
+  const floor=document.getElementById('t1Floor').value;
+  const lv=crowdLevel(nowMin,day);
+  const w=waitSec(nowMin,day,instant);
+  const eT=w+rideSec(floor), sT=stairUp(floor);
+  const meta=crowdMeta(lv);
+  const f=+floor;
+
+  // 즉시탑승 ON이면 이동시간만, OFF면 대기+이동
+  const rideOnly=rideSec(floor);
+  document.getElementById('t1ElevT').textContent=instant?fs(rideOnly):fs(eT);
+  document.getElementById('t1StairT').textContent=fs(sT);
+  document.getElementById('t1ElevSub').textContent=instant?'즉시 탑승 · 대기 없음':'대기 '+fs(w)+' + 이동 '+fs(rideOnly);
+  // 칼로리
+  const kcal=calcCalorie(floor);
+  const foodStr=getFoodComparison(kcal);
+  document.getElementById('t1CalRow').style.display='block';
+  document.getElementById('t1CalKcal').textContent=kcal+' kcal';
+  document.getElementById('t1CalFood').textContent=foodStr+' 소모량';
+  document.getElementById('t1RTitle').textContent=floor+'층까지 예상 소요시간';
+  document.getElementById('t1RSub').textContent=day+'요일 '+minToStr(nowMin)+(instant?' · 즉시 탑승':' · '+meta.lb);
+
+  const pill=document.getElementById('t1Pill');
+  pill.className='spill '+(instant?'pblue':meta.pill);
+  pill.textContent=instant?'즉시 탑승':meta.lb;
+
+  const rb=document.getElementById('t1RecBan'), ri=document.getElementById('t1RecIco');
+  if(sT<eT) setBan(rb,ri,'bblue','stairs','계단이 더 빠릅니다','엘리베이터보다 '+fs(eT-sT)+' 절약');
+  else       setBan(rb,ri,'bsafe','check','엘리베이터 이용 권장','계단보다 '+fs(sT-eT)+' 빠릅니다');
+
+  document.getElementById('t1Dtl').innerHTML='<strong>'+(f%2===0?'짝수층':'홀수층')+'</strong> 전용 엘리베이터 2대 운행 · 예상 대기 인원: '+(lv===3?'25명 이상':lv===2?'10~25명':lv===1?'5~10명':'5명 미만');
+  document.getElementById('t1CDot').style.background=meta.c;
+  document.getElementById('t1CLbl').innerHTML='혼잡도: <strong>'+meta.lb+'</strong> ('+day+'요일 '+minToStr(nowMin)+')';
+
+  document.getElementById('t1Res').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('t1Res').scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+// ═══════════════════════════════════════════════════
+// 탭2: 지각 가능성
+// ═══════════════════════════════════════════════════
+let classes=[], selIdx=-1;
+
+function t2GetNowMin(){
+  return selToMin(
+    document.getElementById('t2NowAmpm').value,
+    document.getElementById('t2NowH').value,
+    document.getElementById('t2NowM').value
+  );
+}
+
+function addCls(){
+  const day   =document.getElementById('t2AddDay').value;
+  const ampm  =document.getElementById('t2AddAmpm').value;
+  const h     =document.getElementById('t2AddH').value;
+  const m     =document.getElementById('t2AddM').value;
+  const floor =document.getElementById('t2AddFloor').value;
+  const name  =document.getElementById('t2AddName').value.trim()||'수업';
+  const totalMin=selToMin(ampm,h,m);
+  classes.push({day,totalMin,floor,name,disp:minToStr(totalMin)});
+  document.getElementById('t2AddName').value='';
+  renderCls();
+  document.getElementById('t2LateBtn').disabled=false;
+}
+
+function delCls(i){
+  classes.splice(i,1);
+  if(selIdx===i) selIdx=-1;
+  else if(selIdx>i) selIdx--;
+  renderCls();
+  if(!classes.length) document.getElementById('t2LateBtn').disabled=true;
+}
+
+function selectCls(i){
+  selIdx=(selIdx===i)?-1:i;
+  renderCls();
+}
+
+function renderCls(){
+  const wrap=document.getElementById('t2ClsList');
+  if(!classes.length){ wrap.innerHTML='<div class="empty-hint">아래에서 수업을 추가하세요</div>'; return; }
+  wrap.innerHTML='';
+  const ul=document.createElement('div'); ul.className='cls-list';
+  classes.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='cls-item'+(i===selIdx?' sel':'');
+    d.onclick=()=>selectCls(i);
+    d.innerHTML=
+      '<span class="ci-day">'+c.day+'</span>'+
+      '<div class="ci-info">'+
+        '<div class="ci-name">'+c.name+' · '+c.floor+'층</div>'+
+        '<div class="ci-meta">'+c.disp+' 시작</div>'+
+      '</div>'+
+      '<div class="ci-radio"><div class="ci-radio-dot"></div></div>'+
+      '<button onclick="event.stopPropagation();delCls('+i+')" '+
+        'style="background:none;border:none;cursor:pointer;padding:4px;color:var(--t3);display:flex;" aria-label="삭제">'+
+        '<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round">'+
+          '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'+
+      '</button>';
+    ul.appendChild(d);
+  });
+  wrap.appendChild(ul);
+}
+
+function checkLate(){
+  if(!classes.length) return;
+  const day=document.getElementById('t2Day').value;
+  const nowMin=t2GetNowMin();
+
+  // 선택된 수업 하나면 그것만, 아니면 오늘+미래 전체
+  const targets = selIdx>=0
+    ? [classes[selIdx]]
+    : classes.filter(c=>c.day===day && c.totalMin>nowMin).sort((a,b)=>a.totalMin-b.totalMin);
+
+  const cont=document.getElementById('t2ResCont');
+  const resDiv=document.getElementById('t2Res');
+  const hdg=document.getElementById('t2ResHdg');
+  resDiv.classList.remove('hidden');
+  cont.innerHTML='';
+
+  if(!targets.length){
+    hdg.textContent='결과';
+    cont.innerHTML='<div class="card" style="font-size:14px;color:var(--t2);">'+(selIdx>=0?'선택한 수업 정보가 없습니다.':'오늘('+day+'요일) 남은 수업이 없습니다.')+'</div>';
+    setTimeout(()=>resDiv.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+    return;
+  }
+
+  hdg.textContent = selIdx>=0
+    ? targets[0].name+' 지각 분석'
+    : day+'요일 남은 수업 지각 분석';
+
+  targets.slice(0,5).forEach(c=>{
+    const lv=crowdLevel(nowMin,day);
+    const w=waitSec(nowMin,day,false);
+    const eT=w+rideSec(c.floor), sT=stairUp(c.floor);
+    const rem=c.totalMin-nowMin;
+    const mE=rem - Math.round(eT/60);
+    const mS=rem - Math.round(sT/60);
+
+    // 지각 상태
+    let bc,bt,bd;
+    if(rem<=0){
+      bc='bdanger'; bt='⚠ 수업이 이미 시작됐어요'; bd='최대한 빠르게 이동하세요';
+    } else if(mE<0 && mS>=0){
+      bc='bwarn'; bt='계단으로 가면 지각을 피할 수 있어요';
+      bd='엘리베이터 탑승 시 약 '+Math.abs(Math.round(mE))+'분 지각 예상';
+    } else if(mE<0 && mS<0){
+      bc='bdanger'; bt='⚠ 지각 위험'; bd='계단으로도 '+Math.abs(Math.round(mS))+'분 부족합니다';
+    } else if(mE>=0 && mE<2){
+      bc='bwarn'; bt='여유가 '+Math.round(mE*60)+'초로 매우 빠듯해요';
+      bd='계단 이용 강력 권장 · 계단 기준 '+Math.round(mS)+'분 여유';
+    } else {
+      bc='bsafe'; bt='지각 가능성 낮음';
+      bd='엘리베이터 기준 약 '+Math.round(mE)+'분 여유';
+    }
+
+    // 여유 프로그레스
+    const ratio=Math.min(1,Math.max(0,(rem*60)/(eT*1.5)));
+    const barColor=ratio>.6?'#166534':ratio>.3?'#92400e':'#991b1b';
+
+    const div=document.createElement('div'); div.className='late-card';
+    div.innerHTML=
+      '<div class="lc-header">'+
+        '<div>'+
+          '<div class="lc-name">'+c.name+'</div>'+
+          '<div class="lc-meta">'+c.disp+' 시작 · '+c.floor+'층 · '+(rem>0?'수업까지 '+rem+'분 남음':'이미 시작')+'</div>'+
+        '</div>'+
+        '<div class="spill '+bc.replace('b','p').replace('danger','danger').replace('warn','warn').replace('safe','safe')+'">'+
+          (rem<=0?'시작됨':mE<0?'지각':mE<2?'빠듯':'여유')+
+        '</div>'+
+      '</div>'+
+      '<div class="lc-times">'+
+        '<div class="lc-box"><div class="ll">🛗 엘리베이터</div><div class="lv">'+fs(eT)+'</div></div>'+
+        '<div class="lc-box"><div class="ll">🚶 계단</div><div class="lv">'+fs(sT)+'</div></div>'+
+      '</div>'+
+      '<div style="margin-bottom:8px;">'+
+        '<div style="display:flex;justify-content:space-between;margin-bottom:5px;">'+
+          '<span style="font-size:12px;color:var(--t2);">남은 시간 대비 소요시간</span>'+
+          '<span style="font-size:12px;font-weight:700;">'+(rem<=0?'초과':rem+'분 남음')+'</span>'+
+        '</div>'+
+        '<div class="pbar-w"><div class="pbar" style="width:'+Math.round(ratio*100)+'%;background:'+barColor+';"></div></div>'+
+      '</div>'+
+      '<div class="ban '+bc+'" style="margin:0">'+
+        '<div class="bico">'+SVGI[bc==='bsafe'?'check':bc==='bwarn'?'stairs':'warn']+'</div>'+
+        '<div><strong>'+bt+'</strong><span>'+bd+'</span></div>'+
+      '</div>';
+    cont.appendChild(div);
+  });
+
+  setTimeout(()=>resDiv.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+// ═══════════════════════════════════════════════════
+// 초기화
+// ═══════════════════════════════════════════════════
+(function(){
+  const days=['일','월','화','수','목','금','토'];
+  const d=new Date(), dayStr=days[d.getDay()];
+  const h24=d.getHours(), m=d.getMinutes();
+  const ampm=h24<12?'am':'pm', h12=h24%12||12;
+  const m5=Math.round(m/5)*5%60;
+
+  // 탭1
+  const t1sel=document.getElementById('t1Day');
+  for(const o of t1sel.options) if(o.value===dayStr){t1sel.value=dayStr;break;}
+  document.getElementById('t1Ampm').value=ampm;
+  document.getElementById('t1Hour').value=String(h12);
+  document.getElementById('t1Min').value=String(m5);
+
+  // 탭2
+  const t2sel=document.getElementById('t2Day');
+  for(const o of t2sel.options) if(o.value===dayStr){t2sel.value=dayStr;break;}
+  document.getElementById('t2NowAmpm').value=ampm;
+  document.getElementById('t2NowH').value=String(h12);
+  document.getElementById('t2NowM').value=String(m5);
+
+  // 수업 추가 폼 기본값
+  const t2addsel=document.getElementById('t2AddDay');
+  for(const o of t2addsel.options) if(o.value===dayStr){t2addsel.value=dayStr;break;}
+
+  t1UpdateBadge();
+})();
+</script>
+</body>
+</html>
